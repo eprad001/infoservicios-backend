@@ -51,7 +51,7 @@ CREATE TABLE contratos (
     cliente_id INTEGER NOT NULL,
     total INTEGER NOT NULL,
     finalizado BOOLEAN,
-    FOREIGN KEY (cliente_id) REFERENCES personas(id),
+    FOREIGN KEY (cliente_id) REFERENCES personas(id)
 );
 
 -- Tabla de items de contrato
@@ -61,6 +61,6 @@ CREATE TABLE contrato_items (
   servicio_id     INT NOT NULL REFERENCES servicios(id),
   cantidad        INT NOT NULL CHECK (cantidad > 0),
   precio_unitario NUMERIC(12,2) NOT NULL,
-  valoracion      INT NOT NULL DEFAULT 0
-  finalizado      BOOLEAN,
+  valoracion      INT NOT NULL DEFAULT 0,
+  finalizado      BOOLEAN
 );
