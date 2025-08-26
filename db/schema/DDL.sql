@@ -49,14 +49,18 @@ CREATE TABLE servicios (
 CREATE TABLE contratos (
     id SERIAL PRIMARY KEY,
     cliente_id INTEGER NOT NULL,
-    trabajador_id INTEGER NOT NULL,
-    servicio_id INTEGER NOT NULL,
-    cantidad INTEGER NOT NULL,
     total INTEGER NOT NULL,
-    contratado BOOLEAN NOT NULL,
     finalizado BOOLEAN,
-    valoracion INTEGER,
     FOREIGN KEY (cliente_id) REFERENCES personas(id),
-    FOREIGN KEY (trabajador_id) REFERENCES personas(id),
-    FOREIGN KEY (servicio_id) REFERENCES servicios(id)
+);
+
+-- Tabla de items de contrato
+CREATE TABLE contrato_items (
+  id              SERIAL PRIMARY KEY,
+  contrato_id     INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+  servicio_id     INT NOT NULL REFERENCES servicios(id),
+  cantidad        INT NOT NULL CHECK (cantidad > 0),
+  precio_unitario NUMERIC(12,2) NOT NULL,
+  valoracion      INT NOT NULL DEFAULT 0
+  finalizado      BOOLEAN,
 );
