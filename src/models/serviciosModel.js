@@ -34,17 +34,7 @@ const deleteServicio = async (id) => {
   return { message: 'Servicio eliminado' };
 };
 
-// Vista enriquecida para React: servicio + categoria + trabajador
-const getServiciosFull = async () => {
-  const { rows } = await pool.query(`
-    SELECT s.*, c.nombre AS categoria_nombre, p.nombre AS trabajador_nombre, p.ap_paterno AS trabajador_ap_paterno, p.ap_materno AS trabajador_ap_materno
-    FROM servicios s
-    LEFT JOIN categorias c ON c.id = s.categoria_id
-    LEFT JOIN personas p ON p.id = s.trabajador_id
-    ORDER BY s.id ASC;
-  `);
-  return rows;
-};
+
 
 export default { getAllServicios, getServicioById, createServicio, updateServicio, deleteServicio, getServiciosFull };
 

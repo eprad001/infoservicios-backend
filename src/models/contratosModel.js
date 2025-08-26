@@ -34,27 +34,7 @@ const deleteContrato = async (id) => {
   return { message: 'Contrato eliminado' };
 };
 
-// ======== Vista de contrato + cliente + trabajador + servicio ======= version inicial acotada a 1 es a 1
-const getContratosFull = async () => {
-  const { rows } = await pool.query(`
-    SELECT ct.*,
-      cli.nombre AS cliente_nombre,
-      cli.ap_paterno AS cliente_ap_paterno,
-      tra.nombre AS trabajador_nombre,
-      tra.ap_paterno AS trabajador_ap_paterno,
-      s.titulo  AS servicio_titulo,
-      s.precio  AS servicio_precio,
-      s.categoria_id,
-      c.nombre  AS categoria_nombre
-    FROM contratos ct
-    LEFT JOIN personas cli ON cli.id = ct.cliente_id
-    LEFT JOIN personas tra ON tra.id = ct.trabajador_id
-    LEFT JOIN servicios s ON s.id = ct.servicio_id
-    LEFT JOIN categorias c ON c.id = s.categoria_id
-    ORDER BY ct.id ASC;
-  `);
-  return rows;
-};
+
 
 
 // ========== Contratos: carrito + detalle + valoración ==========
