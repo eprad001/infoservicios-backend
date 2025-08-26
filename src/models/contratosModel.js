@@ -56,13 +56,19 @@ const getContratosFull = async () => {
   return rows;
 };
 
-export default { getAllContratos, getContratoById, createContrato, updateContrato, deleteContrato, getContratosFull };
 
 // ========== Contratos: carrito + detalle + valoración ==========
 
 export const getContratosCliente = async (clienteId) => {
-  const { rows } = await pool.query(`SELECT ct.id, ct.cliente_id, ct.trabajador_id, ct.total, ct.creado_en FROM contratos ct WHERE ct.cliente_id = $1 ORDER BY ct.id DESC`, [clienteId]);
+  const { rows } = await pool.query(`SELECT ct.id, ct.cliente_id, ct.total, ct.finalizado FROM contratos ct WHERE ct.cliente_id = $1 ORDER BY ct.id DESC`, [clienteId]);
   return rows;
+};
+
+export const getContratoDetalle = async (contratoId) => {
+  const { rows: header } = await pool.query(`SELECT c.*, p.nombre AS cliente_nombre, t.nombre AS trabajador_nombre FROM contratos c JOIN personas p ON p.id = c.cliente_id JOIN personas t ON t.id = c.trabajador_id WHERE c.id = $1`, [contratoId]);
+  if (!header[0]) return null;
+  const { rows: items } = await pool.query(`SELECT ci.*, s.titulo AS servicio_titulo FROM contrato_items ci JOIN servicios s ON s.id = ci.servicio_id WHERE ci.contrato_id = $1 ORDER BY ci.id ASC`, [contratoId]);
+  return { ...header[0], items };
 };
 
 export const getSolicitudesDelTrabajador = async (trabajadorId) => {
@@ -114,16 +120,12 @@ export const crearContratosDesdeCarrito = async (clienteId, items /* [{servicio_
   }
 };
 
-export const getContratoDetalle = async (contratoId) => {
-  const { rows: header } = await pool.query(`SELECT c.*, p.nombre AS cliente_nombre, t.nombre AS trabajador_nombre FROM contratos c JOIN personas p ON p.id = c.cliente_id JOIN personas t ON t.id = c.trabajador_id WHERE c.id = $1`, [contratoId]);
-  if (!header[0]) return null;
-  const { rows: items } = await pool.query(`SELECT ci.*, s.titulo AS servicio_titulo FROM contrato_items ci JOIN servicios s ON s.id = ci.servicio_id WHERE ci.contrato_id = $1 ORDER BY ci.id ASC`, [contratoId]);
-  return { ...header[0], items };
-};
-
 export const valorarItem = async (clienteId, contratoId, itemId, puntos) => {
   const { rows: own } = await pool.query(`SELECT 1 FROM contratos WHERE id=$1 AND cliente_id=$2`, [contratoId, clienteId]);
   if (!own[0]) return null;
   const { rows } = await pool.query(`UPDATE contrato_items SET valoracion = COALESCE(valoracion, 0) + $4 WHERE id = $3 AND contrato_id = $1 RETURNING *`,[contratoId, clienteId, itemId, puntos]);
   return rows[0];
 };
+
+
+export default { getAllContratos, getContratoById, createContrato, updateContrato, deleteContrato, getContratosFull };

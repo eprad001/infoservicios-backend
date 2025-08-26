@@ -60,7 +60,7 @@ CREATE TABLE contrato_items (
   contrato_id     INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
   servicio_id     INT NOT NULL REFERENCES servicios(id),
   cantidad        INT NOT NULL CHECK (cantidad > 0),
-  precio_unitario NUMERIC(12,2) NOT NULL,
+  precio_unitario INTEGER NOT NULL,
   valoracion      INT NOT NULL DEFAULT 0,
   finalizado      BOOLEAN
 );

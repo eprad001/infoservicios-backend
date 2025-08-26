@@ -1,4 +1,5 @@
 import model from '../models/serviciosModel.js';
+import { getServiciosDisponibles, setServicioActivo, getServiciosDelTrabajador } from '../models/serviciosModel.js';
 
 const getAll = async (req, res) => {
   try {
@@ -46,12 +47,9 @@ const remove = async (req, res) => {
   }
 };
 
-export default { getAll, getById, create, update, remove, serviciosDisponibles, toggleServicio, serviciosDelTrabajador};
-
 
 // ======== Servicios (disponibles/estado/del-trabajador) ========
 
-import { getServiciosDisponibles, setServicioActivo, getServiciosDelTrabajador } from '../models/serviciosModel.js';
 
 export const serviciosDisponibles = async (_req, res) => {
   try { const data = await getServiciosDisponibles(); return res.json(data); }
@@ -70,3 +68,6 @@ export const serviciosDelTrabajador = async (req, res) => {
         const data = await getServiciosDelTrabajador(id); return res.json(data); }
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
+
+
+export default { getAll, getById, create, update, remove, serviciosDisponibles, toggleServicio, serviciosDelTrabajador};

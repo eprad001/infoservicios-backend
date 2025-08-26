@@ -1,4 +1,5 @@
 import model from '../models/contratosModel.js';
+import { getContratosCliente, getSolicitudesDelTrabajador, crearContratosDesdeCarrito, getContratoDetalle, valorarItem } from '../models/contratosModel.js';
 
 const getAll = async (req, res) => {
   try {
@@ -46,30 +47,32 @@ const remove = async (req, res) => {
   }
 };
 
-export default { getAll, getById, create, update, remove, contratosDelCliente, solicitudesDelTrabajador, checkoutContratos, contratoDetalle, valorarContratoItem};
 
-// === [merged] Contratos (carrito/detalle/valorar item) ===
-import { getContratosCliente, getSolicitudesDelTrabajador, crearContratosDesdeCarrito, getContratoDetalle, valorarItem } from '../models/contratosModel.js';
+// === Contratos (carrito/detalle/valorar item) ===
+
 export const contratosDelCliente = async (req, res) => {
   try { const id = Number(req.params.id);
         if (id !== req.user.id && req.user.rol_id !== 1) return res.status(403).json({ message: 'Acceso denegado' });
         const data = await getContratosCliente(id); return res.json(data); }
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
+
 export const solicitudesDelTrabajador = async (req, res) => {
   try { const id = Number(req.params.id);
         if (id !== req.user.id && req.user.rol_id !== 1) return res.status(403).json({ message: 'Acceso denegado' });
         const data = await getSolicitudesDelTrabajador(id); return res.json(data); }
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
+
 export const checkoutContratos = async (req, res) => {
   try { const { cliente_id, items } = req.body;
-        if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ message: 'items requeridos' });
+        if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ message: 'Items requeridos' });
         if (Number(cliente_id) !== req.user.id && req.user.rol_id !== 1) return res.status(403).json({ message: 'Acceso denegado' });
         const creados = await crearContratosDesdeCarrito(Number(cliente_id), items);
         return res.status(201).json({ contratos: creados }); }
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
+
 export const contratoDetalle = async (req, res) => {
   try { const id = Number(req.params.id);
         const detalle = await getContratoDetalle(id);
@@ -79,11 +82,15 @@ export const contratoDetalle = async (req, res) => {
         return res.json(detalle); }
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
+
 export const valorarContratoItem = async (req, res) => {
   try { const contratoId = Number(req.params.contratoId); const itemId = Number(req.params.itemId); const { puntos } = req.body;
-        if (!Number.isFinite(puntos) || puntos <= 0) return res.status(400).json({ message: 'puntos debe ser > 0' });
+        if (!Number.isFinite(puntos) || puntos <= 0) return res.status(400).json({ message: 'Puntos debe ser > 0' });
         const updated = await valorarItem(req.user.id, contratoId, itemId, puntos);
         if (!updated) return res.status(404).json({ message: 'Item no encontrado o no pertenece a tu contrato' });
         return res.json(updated); }
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
+
+
+export default { getAll, getById, create, update, remove, contratosDelCliente, solicitudesDelTrabajador, checkoutContratos, contratoDetalle, valorarContratoItem};
