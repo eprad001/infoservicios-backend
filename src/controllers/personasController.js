@@ -48,8 +48,6 @@ const remove = async (req, res) => {
   }
 };
 
-export default { getAll, getById, create, update, remove, verPerfilCliente, editarPerfilCliente, verPerfilTrabajador, editarPerfilTrabajador, adminToggleCliente, adminCrearTrabajador, adminEditarTrabajador, adminToggleTrabajador};
-
 
 // === Personas (roles/admin) ===
 
@@ -140,5 +138,9 @@ export const adminEditarTrabajador = async (req, res) => {
     return res.json(out);
   } catch (e) { return res.status(500).json({ error: e.message }); }
 };
+
+
+export default { getAll, getById, create, update, remove, verPerfilCliente, editarPerfilCliente, verPerfilTrabajador, editarPerfilTrabajador, adminToggleCliente, adminCrearTrabajador, adminEditarTrabajador, adminToggleTrabajador};
+
 
 
