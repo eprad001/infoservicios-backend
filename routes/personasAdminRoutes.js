@@ -1,6 +1,7 @@
 // routes/personasAdminRoutes.js
 import { Router } from 'express';
-import { auth, authorize, ROLES } from '../middleware/auth.js';
+import { authorize, ROLES } from '../middleware/roles.js';
+import auth from '../middleware/auth.js';
 import { adminCrearTrabajadorPersona, adminCrearServicioParaTrabajador, adminAsignarServicioATrabajador, adminListarTrabajadoresServicios, adminDeshabilitarTrabajador, adminListarClientes, adminDeshabilitarCliente } from '../src/controllers/personasAdminController.js';
 const router = Router();
 
