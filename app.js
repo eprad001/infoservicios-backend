@@ -9,7 +9,7 @@ import categoriasRoutes from './routes/categoriasRoutes.js';
 import serviciosRoutes from './routes/serviciosRoutes.js';
 import contratosRoutes from './routes/contratosRoutes.js';
 import authRoutes from './routes/authRoutes.js';
-import personasRoutes from './routes/personasAdminRoutes.js';
+import personasAdminRoutes from './routes/personasAdminRoutes.js';
 
 app.use(cors());
 app.use(express.json());
@@ -21,7 +21,7 @@ app.use('/categorias', categoriasRoutes);
 app.use('/servicios', serviciosRoutes);
 app.use('/contratos', contratosRoutes);
 app.use('/auth', authRoutes);
-app.use('/admin', personasRoutes);
+app.use('/admin', personasAdminRoutes);
 
 const PORT = process.env.PORT || 3001;
 
