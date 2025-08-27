@@ -18,7 +18,7 @@ router.get('/trabajador/:id/solicitudes', auth, selfOrRoles('id', ROLES.ADMIN), 
 router.get('/detalle/:id', auth, controller.contratoDetalle);
 
 router.post('/contratos/from-cart', auth, crearDesdeCart);
-router.post('/contratos/:contratoId/servicios/:servicioId/like', auth, authorize(ROLES.CLIENTE), toggleLike);
+router.post('/contratos/:contratoId/servicios/:servicioId/like', auth, toggleLike);
 router.get('/contratos/:contratoId/servicios/:servicioId/likes', auth, contarLikesItem);
 router.get('/servicios/:servicioId/likes', contarLikesServicio);
 

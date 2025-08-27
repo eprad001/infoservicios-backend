@@ -119,7 +119,7 @@ const me = async (req, res) => {
   try {
     const id = req.user?.id;
     if (!id) return res.status(401).json({ message: 'No autorizado' });
-    // Reutilizamos getPersonaById si existe, de lo contrario buscamos por correo
+    // x getPersonaById o buscamos por correo
     const getById = personas.getPersonaById ? personas.getPersonaById : null;
     let persona = null;
     if (getById) {

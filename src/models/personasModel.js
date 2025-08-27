@@ -36,7 +36,17 @@ const getPersonaByCorreo = async (correo) => {
   return rows[0];
 };
 
-export default { getAllPersonas, getPersonaById, createPersona, updatePersona, deletePersona, getPersonaByCorreo };
+// Desactivar extra
+export const setPersonaActiva = async (personaId, activo, mustRoleId = null) => {
+  if (mustRoleId) {
+    const { rows } = await pool.query(`UPDATE personas SET activo=$2 WHERE id=$1 AND rol_id=$3 RETURNING id, correo, activo, rol_id`, [personaId, activo, mustRoleId]);
+    return rows[0];
+  }
+  const { rows } = await pool.query(`UPDATE personas SET activo=$2 WHERE id=$1 RETURNING id, correo, activo, rol_id`, [personaId, activo]);
+  return rows[0];
+};
+
+export default { getAllPersonas, getPersonaById, createPersona, updatePersona, deletePersona, getPersonaByCorreo, setPersonaActiva };
 
 
 // ======== Personas extras (roles) ========
@@ -54,8 +64,7 @@ export const updateClientePerfil = async (id, { nombre, ap_paterno, ap_materno, 
     return rows[0];
   }
   const { rows } = await pool.query(
-    `UPDATE personas SET nombre=$2, ap_paterno=$3, ap_materno=$4, rut=$5, telefono=$6 WHERE id=$1 AND rol_id=2 RETURNING id, correo, nombre, ap_paterno, ap_materno, rut, telefono, activo, rol_id`,
-    [id, nombre, ap_paterno, ap_materno, rut, telefono]);
+    `UPDATE personas SET nombre=$2, ap_paterno=$3, ap_materno=$4, rut=$5, telefono=$6 WHERE id=$1 AND rol_id=2 RETURNING id, correo, nombre, ap_paterno, ap_materno, rut, telefono, activo, rol_id`, [id, nombre, ap_paterno, ap_materno, rut, telefono]);
   return rows[0];
 };
 
@@ -70,15 +79,6 @@ export const updateTrabajadorPerfil = async (id, { telefono, passwordHashed = nu
     return rows[0];
   }
   const { rows } = await pool.query(`UPDATE personas SET telefono=$2 WHERE id=$1 AND rol_id=3 RETURNING id, correo, nombre, ap_paterno, ap_materno, rut, telefono, activo, rol_id`, [id, telefono]);
-  return rows[0];
-};
-
-export const setPersonaActiva = async (personaId, activo, mustRoleId = null) => {
-  if (mustRoleId) {
-    const { rows } = await pool.query(`UPDATE personas SET activo=$2 WHERE id=$1 AND rol_id=$3 RETURNING id, correo, activo, rol_id`, [personaId, activo, mustRoleId]);
-    return rows[0];
-  }
-  const { rows } = await pool.query(`UPDATE personas SET activo=$2 WHERE id=$1 RETURNING id, correo, activo, rol_id`, [personaId, activo]);
   return rows[0];
 };
 

@@ -81,7 +81,6 @@ export async function crearContratoDesdeCart(clienteId, cart, totalFromBody) {
       await client.query(
         `INSERT INTO contrato_items (contrato_id, servicio_id, cantidad, precio_unitario) VALUES ${ph.join(',')}`, values );
     }
-
     await client.query('COMMIT');
     return {
       ok: true,
@@ -109,8 +108,8 @@ export async function crearContratoDesdeCart(clienteId, cart, totalFromBody) {
 }
 
 
- /** TOGGLE "ME GUSTA" con `contrato_items.valoracion` BOOLEAN. Solo el dueño del contrato (clienteId) puede alternar. Valoracion = NOT valoracion sobre el item de ese contrato y servicio.
- likes_servicio_total = COUNT(*) de contrato_items con valoracion=true para ese servicio **/
+//Valoracion = NOT valoracion sobre el item de ese contrato y servicio.
+// likes_servicio_total = COUNT(*) de contrato_items con valoracion=true para ese servicio **/
 
 export async function toggleLikeServicioDeContrato(clienteId, contratoId, servicioId) {
   const client = await pool.connect();
@@ -171,8 +170,5 @@ export async function getLikesServicioTotal(servicioId) {
   const { rows } = await pool.query( `SELECT COUNT(*)::int AS total FROM contrato_items WHERE servicio_id = $1 AND valoracion = TRUE`, [servicioId] );
   return { likes_servicio_total: Number(rows[0].total), status: 200 };
 }
-
-
-
 
 export default { getAllContratos, getContratoById, createContrato, updateContrato, deleteContrato };

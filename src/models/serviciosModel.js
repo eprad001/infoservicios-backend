@@ -1,6 +1,3 @@
-//import pool from '../db.js';
-// CRUD para servicios + consulta con joins
-
 import pool from '../../db/config.js'
 
 const getAllServicios = async () => {
@@ -33,10 +30,6 @@ const deleteServicio = async (id) => {
   await pool.query('DELETE FROM servicios WHERE id = $1', [id]);
   return { message: 'Servicio eliminado' };
 };
-
-
-
-export default { getAllServicios, getServicioById, createServicio, updateServicio, deleteServicio, getServiciosFull };
 
 
 // ======= Servicios extras (helpers y checkout) ======
@@ -74,3 +67,6 @@ export const getServiciosByIds = async (ids) => {
     `SELECT id, precio, trabajador_id, activo FROM servicios WHERE id = ANY($1::int[])`, [ids]);
   return rows;
 };
+
+
+export default { getAllServicios, getServicioById, createServicio, updateServicio, deleteServicio };
