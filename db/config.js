@@ -1,7 +1,7 @@
-import pg from 'pg'
+import pg, { Connection } from 'pg'
 import 'dotenv/config'
 
-const { DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT } = process.env
+/** const { DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT } = process.env
 const pool = new pg.Pool(
     {
         host: DB_HOST,
@@ -12,6 +12,13 @@ const pool = new pg.Pool(
         allowExitOnIdle: true
     }
 )
+*/
+
+const { BD_URL } = process.env
+const config = {
+    connectionSring: BD_URL
+}
+const pool = new Connection(config)
 
 pool.query('SELECT NOW()', (err, res) => {
         if(err){
