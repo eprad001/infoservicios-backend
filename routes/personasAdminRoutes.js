@@ -6,7 +6,7 @@ import { adminCrearTrabajadorPersona, adminCrearServicioParaTrabajador, adminAsi
 const router = Router();
 
 // Trabajadores (admin)
-router.get('/admin/personas/trabajadores', auth, authorize(ROLES.ADMI), adminListarTrabajadoresServicios);
+router.get('/admin/personas/trabajadores', auth, authorize(ROLES.ADMIN), adminListarTrabajadoresServicios);
 router.post('/admin/personas/trabajadores', auth, authorize(ROLES.ADMIN), adminCrearTrabajadorPersona);
 router.post('/admin/personas/:trabajadorId/servicios', auth, authorize(ROLES.ADMIN), adminCrearServicioParaTrabajador);
 router.patch('/admin/personas/servicios/:servicioId/asignar', auth, authorize(ROLES.ADMIN), adminAsignarServicioATrabajador);
