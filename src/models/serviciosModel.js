@@ -32,7 +32,7 @@ const deleteServicio = async (id) => {
 };
 
 
-// ======= Servicios extras (helpers y checkout) ======
+// ======= Extras ======
 
 export const getServiciosDisponibles = async () => {
   const { rows } = await pool.query(
@@ -46,25 +46,18 @@ export const getServiciosDisponibles = async () => {
 };
 
 export const getServiciosDelTrabajador = async (trabajadorId) => {
-  const { rows } = await pool.query(
-    `SELECT s.*, c.nombre AS categoria_nombre
-    FROM servicios s
-    LEFT JOIN categorias c ON c.id = s.categoria_id
-    WHERE s.trabajador_id = $1
-    ORDER BY s.id ASC`, [trabajadorId]);
+  const { rows } = await pool.query( `SELECT s.*, c.nombre AS categoria_nombre FROM servicios s LEFT JOIN categorias c ON c.id = s.categoria_id WHERE s.trabajador_id = $1 ORDER BY s.id ASC`, [trabajadorId] ); 
   return rows;
 };
 
 export const setServicioActivo = async (servicioId, activo) => {
-  const { rows } = await pool.query(
-    `UPDATE servicios SET activo=$2 WHERE id=$1 RETURNING *`, [servicioId, activo]);
+  const { rows } = await pool.query( `UPDATE servicios SET activo=$2 WHERE id=$1 RETURNING *`, [servicioId, activo]);
   return rows[0];
 };
 
 export const getServiciosByIds = async (ids) => {
   if (!ids?.length) return [];
-  const { rows } = await pool.query(
-    `SELECT id, precio, trabajador_id, activo FROM servicios WHERE id = ANY($1::int[])`, [ids]);
+  const { rows } = await pool.query( `SELECT id, precio, trabajador_id, activo FROM servicios WHERE id = ANY($1::int[])`, [ids]);
   return rows;
 };
 

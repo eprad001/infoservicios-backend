@@ -1,7 +1,6 @@
-// src/controllers/personasAdminController.js
 import {crearTrabajadorPersona, assertEsTrabajador, crearServicioParaTrabajador, asignarServicioATrabajador, listarTrabajadoresConServicios, listarClientes, deshabilitarTrabajador, deshabilitarCliente} from '../models/personasAdminModel.js';
 
-//requiere admin (rol_id = 1)
+// rol_id = 1 aguante mientras lo hago centralizado...
 function requireAdmin(req) {
   if (!req.user?.id) {
     const err = new Error('No autorizado');
@@ -15,7 +14,7 @@ function requireAdmin(req) {
   }
 }
 
-// Trabajadores =================================================================================================
+// Trabajadores que dicen que trabajan =================================================================
 export async function adminCrearTrabajadorPersona(req, res) {
   try {
     requireAdmin(req);
@@ -107,7 +106,7 @@ export async function adminDeshabilitarTrabajador(req, res) {
   }
 }
 
-// Clientes ===========================================================================================================================
+// Clientes que luego se van a quejar del servicio ======================================================================
 export async function adminListarClientes(req, res) {
   try {
     requireAdmin(req);

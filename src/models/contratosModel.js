@@ -1,7 +1,4 @@
-// CRUD para contrato + consulta con joins
-
 import pool from '../../db/config.js';
-import { getServiciosByIds } from './serviciosModel.js';
 
 const getAllContratos = async () => {
   const { rows } = await pool.query('SELECT * FROM contratos ORDER BY id ASC');
@@ -35,9 +32,7 @@ const deleteContrato = async (id) => {
 };
 
 
-
-
-// ========== Contratos: carrito + detalle + valoración ==========
+// ============== Contratos: carrito + detalle + valoración =========================
 
 export const getContratosCliente = async (clienteId) => {
   const { rows } = await pool.query(`SELECT ct.id, ct.cliente_id, ct.total, ct.finalizado FROM contratos ct WHERE ct.cliente_id = $1 ORDER BY ct.id DESC`, [clienteId]);
@@ -57,16 +52,14 @@ export const getSolicitudesDelTrabajador = async (trabajadorId) => {
 };
 
 // ======================================================================================================
-
-
+// CREA CARRITO DE SERVICIOS = CONTRATO
 
 export async function crearContratoDesdeCart(clienteId, cart, totalFromBody) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    const { rows: cRows } = await client.query(
-      `INSERT INTO contratos (cliente_id, total, finalizado) VALUES ($1, $2, FALSE) RETURNING id, cliente_id, total, finalizado`, [clienteId, totalFromBody] );
+    const { rows: cRows } = await client.query( `INSERT INTO contratos (cliente_id, total, finalizado) VALUES ($1, $2, FALSE) RETURNING id, cliente_id, total, finalizado`, [clienteId, totalFromBody] );
     const contrato = cRows[0];
 
     if (Array.isArray(cart) && cart.length > 0) {
@@ -78,8 +71,7 @@ export async function crearContratoDesdeCart(clienteId, cart, totalFromBody) {
         ph.push(`($${k}, $${k+1}, $${k+2}, $${k+3})`);
         k += 4;
       }
-      await client.query(
-        `INSERT INTO contrato_items (contrato_id, servicio_id, cantidad, precio_unitario) VALUES ${ph.join(',')}`, values );
+      await client.query( `INSERT INTO contrato_items (contrato_id, servicio_id, cantidad, precio_unitario) VALUES ${ph.join(',')}`, values );
     }
     await client.query('COMMIT');
     return {
@@ -107,8 +99,7 @@ export async function crearContratoDesdeCart(clienteId, cart, totalFromBody) {
   } finally { client.release(); }
 }
 
-
-//Valoracion = NOT valoracion sobre el item de ese contrato y servicio.
+// VALORAR SERVICIO DE UN CONTRATO =====================================================================
 // likes_servicio_total = COUNT(*) de contrato_items con valoracion=true para ese servicio **/
 
 export async function toggleLikeServicioDeContrato(clienteId, contratoId, servicioId) {
@@ -122,7 +113,6 @@ export async function toggleLikeServicioDeContrato(clienteId, contratoId, servic
       await client.query('ROLLBACK');
       return { error: 'Contrato no encontrado o no pertenece al cliente', status: 404 };
     }
-
     // 2) Localizar el item (único por contrato+servicio)
     const { rows: itemRows } = await client.query( `SELECT id, valoracion FROM contrato_items WHERE contrato_id = $1 AND servicio_id = $2 LIMIT 1 FOR UPDATE`, [contratoId, servicioId] );
     if (!itemRows[0]) {
@@ -130,14 +120,11 @@ export async function toggleLikeServicioDeContrato(clienteId, contratoId, servic
       return { error: 'Servicio no pertenece a este contrato', status: 404 };
     }
     const itemId = itemRows[0].id;
-
-    // 3) Toggle: NOT valoracion
+    // 3) Toggle NOT valoracion que ame usar
     const { rows: upd } = await client.query( `UPDATE contrato_items SET valoracion = NOT valoracion WHERE id = $1 RETURNING valoracion`, [itemId] );
     const liked = !!upd[0].valoracion;
-
     // 4) Total por servicio (valoracion = true)
     const { rows: tot } = await client.query( `SELECT COUNT(*)::int AS total FROM contrato_items WHERE servicio_id = $1 AND valoracion = TRUE`, [servicioId] );
-
     await client.query('COMMIT');
     return {
       liked,
@@ -149,23 +136,21 @@ export async function toggleLikeServicioDeContrato(clienteId, contratoId, servic
   } catch (e) {
     await client.query('ROLLBACK');
     throw e;
-  } finally {
-    client.release();
-  }
+  } finally { client.release(); }
 }
 
-/** Contadores (item + total servicio) */
+// Contadores (item + total servicio)
 export async function getLikesItem(contratoId, servicioId) {
   const { rows: it } = await pool.query(
     `SELECT id, valoracion FROM contrato_items WHERE contrato_id = $1 AND servicio_id = $2 LIMIT 1`, [contratoId, servicioId] );
   if (!it[0]) return { error: 'Servicio no pertenece a este contrato', status: 404 };
   const itemId = it[0].id;
   const likes_item = it[0].valoracion ? 1 : 0;
-
   const { rows: tot } = await pool.query( `SELECT COUNT(*)::int AS total FROM contrato_items WHERE servicio_id = $1 AND valoracion = TRUE`, [servicioId] );
   return { item_id: itemId, likes_item, likes_servicio_total: Number(tot[0].total), status: 200 };
 }
 
+// Suma todos los likes del universo por servicio y los totaliza
 export async function getLikesServicioTotal(servicioId) {
   const { rows } = await pool.query( `SELECT COUNT(*)::int AS total FROM contrato_items WHERE servicio_id = $1 AND valoracion = TRUE`, [servicioId] );
   return { likes_servicio_total: Number(rows[0].total), status: 200 };

@@ -56,12 +56,6 @@ export const serviciosDisponibles = async (_req, res) => {
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
 
-export const toggleServicio = async (req, res) => {
-  try { const { id } = req.params; const { activo } = req.body; const out = await setServicioActivo(id, !!activo);
-        if (!out) return res.status(404).json({ message: 'Servicio no encontrado' }); return res.json(out); }
-  catch (e) { return res.status(500).json({ error: e.message }); }
-};
-
 export const serviciosDelTrabajador = async (req, res) => {
   try { const id = Number(req.params.id);
         if (id !== req.user.id && req.user.rol_id !== 1) return res.status(403).json({ message: 'Acceso denegado' });
@@ -69,5 +63,10 @@ export const serviciosDelTrabajador = async (req, res) => {
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
 
+export const toggleServicio = async (req, res) => {
+  try { const { id } = req.params; const { activo } = req.body; const out = await setServicioActivo(id, !!activo);
+        if (!out) return res.status(404).json({ message: 'Servicio no encontrado' }); return res.json(out); }
+  catch (e) { return res.status(500).json({ error: e.message }); }
+};
 
 export default { getAll, getById, create, update, remove, serviciosDisponibles, toggleServicio, serviciosDelTrabajador};

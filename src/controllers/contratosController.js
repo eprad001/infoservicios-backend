@@ -77,8 +77,9 @@ export const contratoDetalle = async (req, res) => {
 };
 
 // ===================================================================================================================
+// Nota personal: siempre fue mas facil ir dejando la ruta como aca para no enredarse...
 
-/** POST /contratos/from-cart */
+// POST /contratos/from-cart
 export async function crearDesdeCart(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ ok: false, error: 'No autorizado' });
@@ -93,7 +94,7 @@ export async function crearDesdeCart(req, res) {
   }
 }
 
-/** POST /contratos/:contratoId/servicios/:servicioId/like (toggle) */
+// POST /contratos/:contratoId/servicios/:servicioId/like
 export async function toggleLike(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ ok: false, error: 'No autorizado' });
@@ -109,7 +110,7 @@ export async function toggleLike(req, res) {
   }
 }
 
-/** GET /contratos/:contratoId/servicios/:servicioId/likes */
+// GET /contratos/:contratoId/servicios/:servicioId/likes
 export async function contarLikesItem(req, res) {
   try {
     const contratoId = Number(req.params.contratoId);
@@ -122,7 +123,7 @@ export async function contarLikesItem(req, res) {
   }
 }
 
-/** GET /servicios/:servicioId/likes */
+// GET /servicios/:servicioId/likes
 export async function contarLikesServicio(req, res) {
   try {
     const servicioId = Number(req.params.servicioId);
@@ -133,5 +134,4 @@ export async function contarLikesServicio(req, res) {
   }
 }
 
-
-export default { getAll, getById, create, update, remove, contratosDelCliente, solicitudesDelTrabajador, checkoutContratos, contratoDetalle};
+export default { getAll, getById, create, update, remove, contratosDelCliente, solicitudesDelTrabajador, contratoDetalle};

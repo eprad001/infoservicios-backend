@@ -16,7 +16,7 @@ const signToken = (persona) => {
   return jwt.sign(payload, secret, { expiresIn });
 };
 
-// ========== Validadores =========
+// ========== Validadores para que los datos queden validados xD =========
 const validarEmail = (correo = '') =>
   /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(correo).trim());
 
@@ -48,7 +48,7 @@ const register = async (req, res) => {
       rut,
       telefono,
       activo = true,
-      rol_id = 2 // 2 = Cliente por defecto
+      rol_id = 2 // 2 = Cliente
     } = req.body;
 
     const correoNorm = String(correo || '').trim().toLowerCase();
@@ -68,12 +68,11 @@ const register = async (req, res) => {
       });
     }
 
-    // Unicidad por correo (case-insensitive)
+    // Unicidad unica por correo correistico
     const existe = await personas.getPersonaByCorreo(correoNorm);
     if (existe) {
       return res.status(409).json({ message: 'El correo ya está registrado' });
     }
-
     const hashed = await bcrypt.hash(password, 10);
     const nueva = await personas.createPersona({
       correo: correoNorm,
@@ -119,7 +118,7 @@ const me = async (req, res) => {
   try {
     const id = req.user?.id;
     if (!id) return res.status(401).json({ message: 'No autorizado' });
-    // x getPersonaById o buscamos por correo
+    // Buscamos x getPersonaById o buscamos por correo o ya no buscamos nada y nos vamos... u_u
     const getById = personas.getPersonaById ? personas.getPersonaById : null;
     let persona = null;
     if (getById) {

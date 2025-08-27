@@ -100,11 +100,22 @@ export const editarPerfilTrabajador = async (req, res) => {
   } catch (e) { return res.status(500).json({ error: e.message }); }
 };
 
+// Aqui ya se esta armando un desmadre ... hay que dividir entre personas y administracion de usuarios que tiene casi toda la logicaaaa... ;_;
+
 export const adminToggleCliente = async (req, res) => {
   try {
     const { id } = req.params; const { activo } = req.body;
     const out = await setPersonaActiva(id, !!activo, 2);
     if (!out) return res.status(404).json({ message: 'Cliente no encontrado' });
+    return res.json(out);
+  } catch (e) { return res.status(500).json({ error: e.message }); }
+};
+
+export const adminToggleTrabajador = async (req, res) => {
+  try {
+    const { id } = req.params; const { activo } = req.body;
+    const out = await setPersonaActiva(id, !!activo, 3);
+    if (!out) return res.status(404).json({ message: 'Trabajador no encontrado' });
     return res.json(out);
   } catch (e) { return res.status(500).json({ error: e.message }); }
 };
@@ -130,11 +141,4 @@ export const adminEditarTrabajador = async (req, res) => {
   } catch (e) { return res.status(500).json({ error: e.message }); }
 };
 
-export const adminToggleTrabajador = async (req, res) => {
-  try {
-    const { id } = req.params; const { activo } = req.body;
-    const out = await setPersonaActiva(id, !!activo, 3);
-    if (!out) return res.status(404).json({ message: 'Trabajador no encontrado' });
-    return res.json(out);
-  } catch (e) { return res.status(500).json({ error: e.message }); }
-};
+

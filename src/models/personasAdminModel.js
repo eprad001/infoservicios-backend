@@ -1,6 +1,12 @@
 import pool from '../../db/config.js';
 import bcrypt from 'bcryptjs';
 
+export async function assertEsTrabajador(trabajador_id) {
+  const { rows } = await pool.query(
+    `SELECT id FROM personas WHERE id = $1 AND rol_id = 3`, [trabajador_id] );
+  return !!rows[0];
+}
+
 export async function crearTrabajadorPersona({
   correo,
   password,
@@ -42,12 +48,6 @@ export async function crearTrabajadorPersona({
   }
 }
 
-export async function assertEsTrabajador(trabajador_id) {
-  const { rows } = await pool.query(
-    `SELECT id FROM personas WHERE id = $1 AND rol_id = 3`, [trabajador_id] );
-  return !!rows[0];
-}
-
 export async function crearServicioParaTrabajador(trabajador_id, { titulo, descripcion = null, precio = 0, foto = null }) {
   const { rows } = await pool.query(
     `INSERT INTO servicios (titulo, descripcion, precio, foto, trabajador_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, titulo, descripcion, precio, foto, trabajador_id`, [titulo, descripcion, precio, foto, trabajador_id] );
@@ -64,7 +64,6 @@ export async function listarTrabajadoresConServicios({ q = null, activo = null }
   const where = ['p.rol_id = 3'];
   const params = [];
   let i = 1;
-
   if (q && String(q).trim() !== '') {
     params.push(`%${String(q).trim()}%`);
     where.push(`(p.nombre ILIKE $${i} OR p.ap_paterno ILIKE $${i} OR p.ap_materno ILIKE $${i} OR p.correo ILIKE $${i})`);
@@ -111,6 +110,12 @@ export async function listarTrabajadoresConServicios({ q = null, activo = null }
   };
 }
 
+export async function deshabilitarTrabajador(trabajador_id) {
+  const { rows } = await pool.query(
+    `UPDATE personas SET activo = FALSE WHERE id = $1 AND rol_id = 3 RETURNING id, correo, nombre, ap_paterno, ap_materno, rut, telefono, activo, rol_id`, [trabajador_id] );
+  return rows[0] || null;
+}
+
 export async function listarClientes({ q = null, activo = null } = {}) {
   const where = ['p.rol_id = 2'];
   const params = [];
@@ -130,12 +135,6 @@ export async function listarClientes({ q = null, activo = null } = {}) {
   const { rows } = await pool.query(
     `SELECT p.id, p.correo, p.nombre, p.ap_paterno, p.ap_materno, p.rut, p.telefono, p.activo, p.rol_id FROM personas p ${whereSQL} ORDER BY p.id ASC`, params );
   return { ok: true, count: rows.length, results: rows };
-}
-
-export async function deshabilitarTrabajador(trabajador_id) {
-  const { rows } = await pool.query(
-    `UPDATE personas SET activo = FALSE WHERE id = $1 AND rol_id = 3 RETURNING id, correo, nombre, ap_paterno, ap_materno, rut, telefono, activo, rol_id`, [trabajador_id] );
-  return rows[0] || null;
 }
 
 export async function deshabilitarCliente(cliente_id) {
