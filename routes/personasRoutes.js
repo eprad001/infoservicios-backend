@@ -3,7 +3,6 @@ import { Router } from 'express';
 const router = Router();
 import controller from '../src/controllers/personasController.js';
 import auth from '../middleware/auth.js';
-import { authorize, selfOrRoles, ROLES } from '../middleware/roles.js';
 
 // CRUD Personas
 router.get('/', auth, authorize(ROLES.ADMIN), controller.getAll);

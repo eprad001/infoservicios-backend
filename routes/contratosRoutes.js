@@ -4,7 +4,6 @@ const router = Router();
 import controller from '../src/controllers/contratosController.js';
 import { crearDesdeCart, toggleLike, contarLikesItem, contarLikesServicio } from '../src/controllers/contratosController.js';
 import auth from '../middleware/auth.js';
-import { authorize, ROLES } from '../middleware/roles.js';
 
 router.get('/', auth, authorize(ROLES.ADMIN, ROLES.TRABAJADOR, ROLES.CLIENTE), controller.getAll);
 router.get('/:id', auth, authorize(ROLES.ADMIN, ROLES.TRABAJADOR, ROLES.CLIENTE), controller.getById);
