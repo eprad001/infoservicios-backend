@@ -2,6 +2,7 @@ import { authorize, selfOrRoles, ROLES } from '../middleware/roles.js';
 import { Router } from 'express';
 const router = Router();
 import controller from '../src/controllers/contratosController.js';
+import { crearDesdeCart, toggleLike, contarLikesItem, contarLikesServicio } from '../src/controllers/contratosController.js';
 import auth from '../middleware/auth.js';
 import { authorize, ROLES } from '../middleware/roles.js';
 
@@ -14,8 +15,11 @@ router.delete('/:id', auth, authorize(ROLES.ADMIN, ROLES.CLIENTE), controller.re
 // Contratos (cliente/trabajador + checkout/valoración) ¿dividir y migrar a archivos separados...? pendiente por ahora
 router.get('/cliente/:id', auth, selfOrRoles('id', ROLES.ADMIN), controller.contratosDelCliente);
 router.get('/trabajador/:id/solicitudes', auth, selfOrRoles('id', ROLES.ADMIN), controller.solicitudesDelTrabajador);
-router.post('/checkout', auth, controller.checkoutContratos);
 router.get('/detalle/:id', auth, controller.contratoDetalle);
-router.post('/:contratoId/items/:itemId/valorar', auth, controller.valorarContratoItem);
+
+router.post('/contratos/from-cart', auth, crearDesdeCart);
+router.post('/contratos/:contratoId/servicios/:servicioId/like', auth, authorize(ROLES.CLIENTE), toggleLike);
+router.get('/contratos/:contratoId/servicios/:servicioId/likes', auth, contarLikesItem);
+router.get('/servicios/:servicioId/likes', contarLikesServicio);
 
 export default router;

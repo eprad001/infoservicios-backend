@@ -1,5 +1,7 @@
 import model from '../models/contratosModel.js';
-import { getContratosCliente, getSolicitudesDelTrabajador, crearContratosDesdeCarrito, getContratoDetalle, valorarItem } from '../models/contratosModel.js';
+import { getContratosCliente, getSolicitudesDelTrabajador, getContratoDetalle } from '../models/contratosModel.js';
+import { crearContratoDesdeCart, toggleLikeServicioDeContrato, getLikesItem, getLikesServicioTotal} from '../models/contratosModel.js';
+
 
 const getAll = async (req, res) => {
   try {
@@ -64,15 +66,6 @@ export const solicitudesDelTrabajador = async (req, res) => {
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
 
-export const checkoutContratos = async (req, res) => {
-  try { const { cliente_id, items } = req.body;
-        if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ message: 'Items requeridos' });
-        if (Number(cliente_id) !== req.user.id && req.user.rol_id !== 1) return res.status(403).json({ message: 'Acceso denegado' });
-        const creados = await crearContratosDesdeCarrito(Number(cliente_id), items);
-        return res.status(201).json({ contratos: creados }); }
-  catch (e) { return res.status(500).json({ error: e.message }); }
-};
-
 export const contratoDetalle = async (req, res) => {
   try { const id = Number(req.params.id);
         const detalle = await getContratoDetalle(id);
@@ -83,14 +76,62 @@ export const contratoDetalle = async (req, res) => {
   catch (e) { return res.status(500).json({ error: e.message }); }
 };
 
-export const valorarContratoItem = async (req, res) => {
-  try { const contratoId = Number(req.params.contratoId); const itemId = Number(req.params.itemId); const { puntos } = req.body;
-        if (!Number.isFinite(puntos) || puntos <= 0) return res.status(400).json({ message: 'Puntos debe ser > 0' });
-        const updated = await valorarItem(req.user.id, contratoId, itemId, puntos);
-        if (!updated) return res.status(404).json({ message: 'Item no encontrado o no pertenece a tu contrato' });
-        return res.json(updated); }
-  catch (e) { return res.status(500).json({ error: e.message }); }
-};
+// ===================================================================================================================
+
+/** POST /contratos/from-cart */
+export async function crearDesdeCart(req, res) {
+  try {
+    if (!req.user?.id) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const clienteId = req.user.id;
+    const cart = req.body?.cart;
+    const total = req.body?.total;
+
+    const result = await crearContratoDesdeCart(clienteId, cart, total);
+    return res.status(201).json(result);
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e?.message || 'Error creando contrato' });
+  }
+}
+
+/** POST /contratos/:contratoId/servicios/:servicioId/like (toggle) */
+export async function toggleLike(req, res) {
+  try {
+    if (!req.user?.id) return res.status(401).json({ ok: false, error: 'No autorizado' });
+    const clienteId = Number(req.user.id);
+    const contratoId = Number(req.params.contratoId);
+    const servicioId = Number(req.params.servicioId);
+
+    const result = await toggleLikeServicioDeContrato(clienteId, contratoId, servicioId);
+    if (result?.error) return res.status(result.status || 400).json({ ok: false, error: result.error });
+    return res.status(200).json({ ok: true, ...result });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e?.message || 'Error al aplicar like' });
+  }
+}
+
+/** GET /contratos/:contratoId/servicios/:servicioId/likes */
+export async function contarLikesItem(req, res) {
+  try {
+    const contratoId = Number(req.params.contratoId);
+    const servicioId = Number(req.params.servicioId);
+    const result = await getLikesItem(contratoId, servicioId);
+    if (result?.error) return res.status(result.status || 400).json({ ok: false, error: result.error });
+    return res.status(200).json({ ok: true, ...result });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e?.message || 'Error al obtener likes' });
+  }
+}
+
+/** GET /servicios/:servicioId/likes */
+export async function contarLikesServicio(req, res) {
+  try {
+    const servicioId = Number(req.params.servicioId);
+    const result = await getLikesServicioTotal(servicioId);
+    return res.status(200).json({ ok: true, ...result });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e?.message || 'Error al obtener likes por servicio' });
+  }
+}
 
 
-export default { getAll, getById, create, update, remove, contratosDelCliente, solicitudesDelTrabajador, checkoutContratos, contratoDetalle, valorarContratoItem};
+export default { getAll, getById, create, update, remove, contratosDelCliente, solicitudesDelTrabajador, checkoutContratos, contratoDetalle};

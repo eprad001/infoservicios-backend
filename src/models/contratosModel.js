@@ -56,56 +56,123 @@ export const getSolicitudesDelTrabajador = async (trabajadorId) => {
   return rows;
 };
 
-export const crearContratosDesdeCarrito = async (clienteId, items /* [{servicio_id, cantidad}] */) => {
+// ======================================================================================================
+
+
+
+export async function crearContratoDesdeCart(clienteId, cart, totalFromBody) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const cantidades = new Map();
-    for (const it of items) {
-      const sid = Number(it.servicio_id);
-      const qty = Number(it.cantidad || 1);
-      if (!Number.isFinite(sid) || !Number.isFinite(qty) || qty <= 0) throw new Error('Item inválido');
-      cantidades.set(sid, (cantidades.get(sid) || 0) + qty);
-    }
-    const servicioIds = [...cantidades.keys()];
-    const servicios = await getServiciosByIds(servicioIds);
-    if (servicios.length !== servicioIds.length) throw new Error('Uno o más servicios no existen');
-    for (const s of servicios) if (!s.activo) throw new Error(`Servicio ${s.id} no está activo`);
-    const porTrabajador = new Map();
-    for (const s of servicios) {
-      const qty = cantidades.get(s.id);
-      if (!porTrabajador.has(s.trabajador_id)) porTrabajador.set(s.trabajador_id, []);
-      porTrabajador.get(s.trabajador_id).push({ servicio: s, cantidad: qty });
-    }
-    const creados = [];
-    for (const [trabajadorId, lista] of porTrabajador.entries()) {
-      const { rows: cRows } = await client.query(`INSERT INTO contratos (cliente_id, trabajador_id, total) VALUES ($1, $2, 0) RETURNING id, cliente_id, trabajador_id, total, creado_en`, [clienteId, trabajadorId]);
-      const contrato = cRows[0];
-      let total = 0;
-      for (const { servicio, cantidad } of lista) {
-        const precio = Number(servicio.precio);
-        total += cantidad * precio;
-        await client.query(`INSERT INTO contrato_items (contrato_id, servicio_id, cantidad, precio_unitario) VALUES ($1, $2, $3, $4)`, [contrato.id, servicio.id, cantidad, precio]);
+
+    const { rows: cRows } = await client.query(
+      `INSERT INTO contratos (cliente_id, total, finalizado) VALUES ($1, $2, FALSE) RETURNING id, cliente_id, total, finalizado`, [clienteId, totalFromBody] );
+    const contrato = cRows[0];
+
+    if (Array.isArray(cart) && cart.length > 0) {
+      const values = [];
+      const ph = [];
+      let k = 1;
+      for (const it of cart) {
+        values.push(contrato.id, it.id, it.count, it.precio);
+        ph.push(`($${k}, $${k+1}, $${k+2}, $${k+3})`);
+        k += 4;
       }
-      const { rows: upd } = await client.query(`UPDATE contratos SET total=$2 WHERE id=$1 RETURNING id, cliente_id, trabajador_id, total, creado_en`, [contrato.id, total]);
-      const { rows: itemsRows } = await client.query(`SELECT ci.id, ci.servicio_id, ci.cantidad, ci.precio_unitario, ci.valoracion, s.titulo AS servicio_titulo FROM contrato_items ci JOIN servicios s ON s.id = ci.servicio_id WHERE ci.contrato_id = $1 ORDER BY ci.id ASC`, [contrato.id]);
-      creados.push({ ...upd[0], items: itemsRows });
+      await client.query(
+        `INSERT INTO contrato_items (contrato_id, servicio_id, cantidad, precio_unitario) VALUES ${ph.join(',')}`, values );
     }
+
     await client.query('COMMIT');
-    return creados;
-  } catch (e) { 
-    await client.query('ROLLBACK'); throw e; 
-  } finally { 
-    client.release(); 
+    return {
+      ok: true,
+      contrato: {
+        id: contrato.id,
+        cliente_id: contrato.cliente_id,
+        total: Number(contrato.total),
+        finalizado: contrato.finalizado,
+        items: Array.isArray(cart) ? cart.map((it) => ({
+          servicio_id: it.id,
+          cantidad: it.count,
+          precio_unitario: it.precio,
+          titulo: it.titulo,
+          descripcion: it.descripcion,
+          subtotal: (typeof it.precio === 'number' && typeof it.count === 'number')
+                    ? it.precio * it.count
+                    : null
+        })) : []
+      }
+    };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally { client.release(); }
+}
+
+
+ /** TOGGLE "ME GUSTA" con `contrato_items.valoracion` BOOLEAN. Solo el dueño del contrato (clienteId) puede alternar. Valoracion = NOT valoracion sobre el item de ese contrato y servicio.
+ likes_servicio_total = COUNT(*) de contrato_items con valoracion=true para ese servicio **/
+
+export async function toggleLikeServicioDeContrato(clienteId, contratoId, servicioId) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1) Verificar que el contrato pertenezca al cliente
+    const { rows: own } = await client.query( `SELECT 1 FROM contratos WHERE id = $1 AND cliente_id = $2`, [contratoId, clienteId] );
+    if (!own[0]) {
+      await client.query('ROLLBACK');
+      return { error: 'Contrato no encontrado o no pertenece al cliente', status: 404 };
+    }
+
+    // 2) Localizar el item (único por contrato+servicio)
+    const { rows: itemRows } = await client.query( `SELECT id, valoracion FROM contrato_items WHERE contrato_id = $1 AND servicio_id = $2 LIMIT 1 FOR UPDATE`, [contratoId, servicioId] );
+    if (!itemRows[0]) {
+      await client.query('ROLLBACK');
+      return { error: 'Servicio no pertenece a este contrato', status: 404 };
+    }
+    const itemId = itemRows[0].id;
+
+    // 3) Toggle: NOT valoracion
+    const { rows: upd } = await client.query( `UPDATE contrato_items SET valoracion = NOT valoracion WHERE id = $1 RETURNING valoracion`, [itemId] );
+    const liked = !!upd[0].valoracion;
+
+    // 4) Total por servicio (valoracion = true)
+    const { rows: tot } = await client.query( `SELECT COUNT(*)::int AS total FROM contrato_items WHERE servicio_id = $1 AND valoracion = TRUE`, [servicioId] );
+
+    await client.query('COMMIT');
+    return {
+      liked,
+      likes_item: liked ? 1 : 0,
+      likes_servicio_total: Number(tot[0].total),
+      item_id: itemId,
+      status: 200
+    };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
   }
-};
+}
 
-export const valorarItem = async (clienteId, contratoId, itemId, puntos) => {
-  const { rows: own } = await pool.query(`SELECT 1 FROM contratos WHERE id=$1 AND cliente_id=$2`, [contratoId, clienteId]);
-  if (!own[0]) return null;
-  const { rows } = await pool.query(`UPDATE contrato_items SET valoracion = COALESCE(valoracion, 0) + $4 WHERE id = $3 AND contrato_id = $1 RETURNING *`,[contratoId, clienteId, itemId, puntos]);
-  return rows[0];
-};
+/** Contadores (item + total servicio) */
+export async function getLikesItem(contratoId, servicioId) {
+  const { rows: it } = await pool.query(
+    `SELECT id, valoracion FROM contrato_items WHERE contrato_id = $1 AND servicio_id = $2 LIMIT 1`, [contratoId, servicioId] );
+  if (!it[0]) return { error: 'Servicio no pertenece a este contrato', status: 404 };
+  const itemId = it[0].id;
+  const likes_item = it[0].valoracion ? 1 : 0;
+
+  const { rows: tot } = await pool.query( `SELECT COUNT(*)::int AS total FROM contrato_items WHERE servicio_id = $1 AND valoracion = TRUE`, [servicioId] );
+  return { item_id: itemId, likes_item, likes_servicio_total: Number(tot[0].total), status: 200 };
+}
+
+export async function getLikesServicioTotal(servicioId) {
+  const { rows } = await pool.query( `SELECT COUNT(*)::int AS total FROM contrato_items WHERE servicio_id = $1 AND valoracion = TRUE`, [servicioId] );
+  return { likes_servicio_total: Number(rows[0].total), status: 200 };
+}
 
 
-export default { getAllContratos, getContratoById, createContrato, updateContrato, deleteContrato, getContratosFull };
+
+
+export default { getAllContratos, getContratoById, createContrato, updateContrato, deleteContrato };
