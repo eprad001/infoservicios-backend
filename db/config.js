@@ -1,32 +1,32 @@
 import pg, { Pool } from 'pg'
 import 'dotenv/config'
 
-/** const { DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT } = process.env
-const pool = new pg.Pool(
-    {
-        host: DB_HOST,
-        user: DB_USER,
-        password: DB_PASSWORD,
-        database: DB_DATABASE,
-        port: DB_PORT,
-        allowExitOnIdle: true
-    }
+const { DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT, DB_URL } = process.env
+let pool = new pg.Pool(
+  {
+    host: DB_HOST,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_DATABASE,
+    port: DB_PORT,
+    allowExitOnIdle: true
+  }
 )
-*/
 
-const { DB_URL } = process.env
-const config = {
+if (process.env.AMBIENTE === 'prod') {
+  const config = {
     connectionString: DB_URL
+  }
+  pool = new Pool(config)
 }
-const pool = new Pool (config)
 
 pool.query('SELECT NOW()', (err, res) => {
-        if(err){
-            console.log('Error al conectar con la BD', err)
-        }else{
-            console.log('BD Conectada', res.rows[0]) 
-        }
-    }
+  if (err) {
+    console.log('Error al conectar con la BD', err)
+  } else {
+    console.log('BD Conectada', res.rows[0])
+  }
+}
 )
 
 export default pool
