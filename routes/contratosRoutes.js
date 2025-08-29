@@ -12,7 +12,7 @@ router.put('/:id', auth, authorize(ROLES.ADMIN, ROLES.TRABAJADOR, ROLES.CLIENTE)
 router.delete('/:id', auth, authorize(ROLES.ADMIN, ROLES.CLIENTE), controller.remove)
 
 // Contratos (cliente/trabajador + checkout/valoración) ¿dividir y migrar a archivos separados...? pendiente por ahora
-router.get('/cliente/:id', auth, authorize(ROLES.CLIENTE), controller.contratosDelCliente)
+router.get('/cliente/:id', controller.contratosDelCliente)
 router.get('/trabajador/:id/solicitudes', auth, selfOrRoles('id', ROLES.ADMIN), controller.solicitudesDelTrabajador)
 router.get('/detalle/:id', auth, controller.contratoDetalle)
 

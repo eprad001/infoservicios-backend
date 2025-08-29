@@ -154,4 +154,16 @@ export const getContratoDetalle = async (contratoId) => {
   return result.rows
 }
 
-export default { getAllContratos, getContratoById, createContrato, updateContrato, deleteContrato }
+const insertContratoDetalle = async (contratoId, detalles = []) => {
+  const valoracion = 0
+  const finalizado = false
+  const valuesString = detalles
+    .map(d => `('${contratoId}', '${d.servicio_id}', ${d.cantidad}, ${d.precio_unitario}, ${valoracion}, ${finalizado})`)
+    .join(',')
+  console.log(valuesString)
+  const query = `INSERT INTO contrato_items (contrato_id, servicio_id, cantidad, precio_unitario, valoracion, finalizado) VALUES ${valuesString};`
+  const response = await pool.query(query)
+  return { result: response, message: 'contrato_items insertados correctamente' }
+}
+
+export default { getAllContratos, getContratoById, createContrato, updateContrato, deleteContrato, insertContratoDetalle }

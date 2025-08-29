@@ -23,7 +23,12 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
+    console.log(req.body)
+    console.log(req.query)
     const newItem = await model.createContrato(req.body)
+    const detalle = req.body.items
+    await model.insertContratoDetalle(newItem.id, detalle)
+    newItem.detalle = detalle
     res.status(201).json(newItem)
   } catch (error) {
     res.status(500).json({ error: error.message })
