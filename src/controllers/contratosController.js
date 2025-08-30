@@ -100,6 +100,7 @@ export async function toggleLike (req, res) {
     const clienteId = Number(req.user.id)
     const contratoId = Number(req.params.contratoId)
     const servicioId = Number(req.params.servicioId)
+    console.log('toggleLike', { clienteId, contratoId, servicioId })
 
     const result = await toggleLikeServicioDeContrato(clienteId, contratoId, servicioId)
     if (result?.error) return res.status(result.status || 400).json({ ok: false, error: result.error })
