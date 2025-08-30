@@ -10,14 +10,25 @@ const getServicioById = async (id) => {
   return rows[0]
 }
 
-const insertServicio = async (services = []) => {
-  const valuesString = services
-    .map(d =>
-         `('${d.titulo}', '${d.descripcion}', '${d.detalle}', ${d.precio}, '${d.foto}', ${d.activo}, ${d.trabajador_id}, ${d.categoria_id}, ${d.valoracion})`
-    )
-    .join(',')
-  console.log(valuesString)
-  const query = `INSERT INTO servicios (titulo, descripcion, detalle, precio, foto, activo, trabajador_id, categoria_id, valoracion) VALUES ${valuesString};`
+const insertServicio = async (trabajadorid, services = []) => {
+  if (!Array.isArray(services) || services.length === 0) {
+    return { result: null, message: 'No hay servicios para insertar' }
+  }
+
+  const valoracion = 0
+  let valuesString = ''
+  for (let i = 0; i < services.length; i++) {
+    const d = services[i]
+    const value = `('${d.titulo}', '${d.descripcion}', '${d.detalle}', ${d.precio}, '${d.foto}', ${d.activo}, ${trabajadorid}, ${d.categoria_id}, ${valoracion})`
+    valuesString += value
+    if (i < services.length - 1) {
+      valuesString += ','
+    }
+  }
+  console.log('Valores a insertar:', valuesString)
+  const query = `
+        INSERT INTO servicios (titulo, descripcion, detalle, precio, foto, activo, trabajador_id, categoria_id, valoracion) 
+        VALUES ${valuesString}`
   const response = await pool.query(query)
   return { result: response, message: 'Servicios insertados correctamente' }
 }
@@ -72,4 +83,4 @@ export const getServiciosByIds = async (ids) => {
   return rows
 }
 
-export default { getAllServicios, getServicioById, createServicio, updateServicio, deleteServicio }
+export default { getAllServicios, getServicioById, createServicio, updateServicio, deleteServicio, insertServicio }

@@ -12,7 +12,6 @@ const { DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT, DB_URL } = process.
 //     allowExitOnIdle: true
 //   }
 // )
-
 // if (process.env.AMBIENTE === 'prod') {
 const config = {
   connectionString: DB_URL
